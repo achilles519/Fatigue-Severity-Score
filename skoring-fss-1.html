@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Skoring FSS — Fatigue Severity Scale</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#EAEEF2;
+    --bg-2:#F6F8FA;
+    --surface:#FFFFFF;
+    --ink:#1B2733;
+    --ink-soft:#5C6B7A;
+    --ink-faint:#8A98A6;
+    --line:#E1E7ED;
+    --line-strong:#CDD6DE;
+    --accent:#2E7D71;
+    --accent-deep:#1E5A50;
+    --accent-tint:#E5F1EE;
+    --rest:#3FA48F;
+    --mid:#E0A94E;
+    --high:#D95F4A;
+    --shadow:0 1px 2px rgba(27,39,51,.04),0 8px 28px rgba(27,39,51,.07);
+    --radius:16px;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;
+    font-family:"Inter",system-ui,sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(1200px 600px at 50% -10%, var(--bg-2), transparent 60%),
+      var(--bg);
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  .wrap{
+    max-width:720px;margin:0 auto;
+    padding:32px 20px 64px;
+    padding-left:max(20px, env(safe-area-inset-left));
+    padding-right:max(20px, env(safe-area-inset-right));
+  }
+
+  /* ---------- Header ---------- */
+  header{text-align:center;margin-bottom:26px}
+  .eyebrow{
+    font-size:.72rem;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--accent);font-weight:600;margin-bottom:12px;
+  }
+  h1{
+    font-family:"Fraunces",serif;font-weight:500;
+    font-size:clamp(2rem,6vw,2.9rem);line-height:1.05;
+    margin:0 0 10px;letter-spacing:-.01em;
+  }
+  h1 em{font-style:italic;color:var(--accent-deep)}
+  .lede{color:var(--ink-soft);font-size:1rem;max-width:44ch;margin:0 auto}
+
+  /* ---------- Instructions ---------- */
+  .howto{
+    background:var(--accent-tint);
+    border:1px solid #CFE4DF;
+    border-radius:14px;padding:16px 18px;margin:24px 0 8px;
+    font-size:.92rem;color:#2C4A44;
+  }
+  .howto b{color:var(--accent-deep)}
+
+  /* ---------- Progress ---------- */
+  .progress-bar{
+    position:sticky;top:0;z-index:5;
+    background:rgba(246,248,250,.86);backdrop-filter:blur(8px);
+    border:1px solid var(--line);border-radius:12px;
+    padding:10px 14px;margin:18px 0 22px;
+    display:flex;align-items:center;gap:12px;font-size:.85rem;color:var(--ink-soft);
+  }
+  .track{flex:1;height:6px;background:var(--line);border-radius:99px;overflow:hidden}
+  .track>span{display:block;height:100%;width:0;background:var(--accent);border-radius:99px;transition:width .35s ease}
+  .count{font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+
+  /* ---------- Questions ---------- */
+  fieldset{
+    border:1px solid var(--line);background:var(--surface);
+    border-radius:var(--radius);box-shadow:var(--shadow);
+    padding:20px 20px 18px;margin:0 0 14px;transition:border-color .2s,box-shadow .2s;
+  }
+  fieldset.missing{border-color:#E7B4AC;box-shadow:0 0 0 3px rgba(217,95,74,.12)}
+  fieldset.done{border-color:#C9E2DC}
+  legend{padding:0;width:100%}
+  .qhead{display:flex;gap:12px;align-items:baseline;margin-bottom:16px}
+  .qnum{
+    font-family:"Fraunces",serif;font-size:.95rem;font-weight:600;
+    color:var(--accent);min-width:1.6em;font-variant-numeric:tabular-nums;
+  }
+  .qtext{font-size:1rem;color:var(--ink);font-weight:500;min-width:0;overflow-wrap:break-word}
+
+  .opts{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+  .opts .opt-input{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+  .opt{
+    display:flex;align-items:center;justify-content:center;min-width:0;
+    min-height:3em;line-height:1;padding:.4em .2em;
+    border:1px solid var(--line-strong);border-radius:11px;
+    font-weight:600;font-size:1rem;color:var(--ink-soft);cursor:pointer;
+    font-variant-numeric:tabular-nums;user-select:none;
+    -webkit-tap-highlight-color:transparent;
+    transition:background .15s,color .15s,border-color .15s,transform .05s;
+  }
+  .opt:hover{border-color:var(--accent);color:var(--accent-deep)}
+  .opt:active{transform:scale(.96)}
+  .opt-input:checked + .opt{
+    background:var(--accent);border-color:var(--accent);color:#fff;
+    box-shadow:0 4px 12px rgba(46,125,113,.28);
+  }
+  .opt-input:focus-visible + .opt{outline:2px solid var(--accent);outline-offset:2px}
+  .scale-ends{display:flex;justify-content:space-between;margin-top:9px;font-size:.72rem;color:var(--ink-faint)}
+
+  /* ---------- Actions ---------- */
+  .actions{display:flex;gap:12px;margin-top:24px}
+  button{font-family:inherit;font-size:1rem;font-weight:600;cursor:pointer;border-radius:12px;transition:background .18s,transform .05s,border-color .18s}
+  button:active{transform:translateY(1px)}
+  .btn-primary{flex:1;background:var(--accent);color:#fff;border:none;padding:15px}
+  .btn-primary:hover{background:var(--accent-deep)}
+  .btn-reset{background:transparent;color:var(--ink-soft);border:1px solid var(--line-strong);padding:15px 22px}
+  .btn-reset:hover{border-color:var(--ink-faint);color:var(--ink)}
+
+  .hint{margin-top:12px;font-size:.85rem;color:var(--high);text-align:center;min-height:1.2em;font-weight:500}
+
+  /* ---------- Result ---------- */
+  .result{margin-top:26px;background:var(--surface);border:1px solid var(--line);
+    border-radius:20px;box-shadow:var(--shadow);padding:28px 24px;text-align:center;
+    display:none;}
+  .result.show{display:block;animation:rise .5s cubic-bezier(.2,.7,.3,1)}
+  @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  .result h2{font-family:"Fraunces",serif;font-weight:500;font-size:1.4rem;margin:0 0 4px}
+
+  .gauge{width:230px;max-width:100%;margin:6px auto 0;display:block}
+  .needle{transition:transform .8s cubic-bezier(.34,1.4,.5,1);transform-origin:120px 120px}
+
+  .score-big{font-family:"Fraunces",serif;font-weight:600;font-size:3.4rem;line-height:1;
+    font-variant-numeric:tabular-nums;margin:-8px 0 2px}
+  .score-label{font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint)}
+
+  .verdict{display:inline-block;margin:18px 0 6px;padding:8px 18px;border-radius:99px;
+    font-weight:600;font-size:1rem}
+  .verdict.lvl-rest{background:#E4F2EE;color:#1E5A50}
+  .verdict.lvl-mid{background:#FBEFD8;color:#8A5A16}
+  .verdict.lvl-high{background:#FBE4DF;color:#9C3324}
+  .interp{color:var(--ink-soft);font-size:.95rem;max-width:46ch;margin:6px auto 0}
+
+  .metrics{display:flex;gap:12px;justify-content:center;margin-top:22px;flex-wrap:wrap}
+  .metric{background:var(--bg-2);border:1px solid var(--line);border-radius:12px;padding:12px 18px;min-width:110px}
+  .metric .m-val{font-family:"Fraunces",serif;font-weight:600;font-size:1.35rem;font-variant-numeric:tabular-nums}
+  .metric .m-key{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);margin-top:2px}
+
+  /* ---------- Footer ---------- */
+  .disclaimer{margin-top:26px;font-size:.8rem;color:var(--ink-faint);text-align:center;
+    line-height:1.6;max-width:52ch;margin-left:auto;margin-right:auto}
+  .disclaimer b{color:var(--ink-soft)}
+
+  @media (max-width:560px){
+    .opts{grid-template-columns:repeat(4,minmax(0,1fr));row-gap:8px}
+  }
+  @media (max-width:480px){
+    .wrap{padding-top:24px;padding-bottom:48px}
+    .wrap{padding-left:max(14px, env(safe-area-inset-left));padding-right:max(14px, env(safe-area-inset-right))}
+    .opt{font-size:1.05rem;border-radius:10px}
+    .opts{gap:6px}
+    fieldset{padding:18px 14px 15px}
+    .qtext{font-size:.96rem}
+    .actions{flex-direction:column}
+    .btn-reset{padding:14px}
+    .metric{min-width:0;flex:1;padding:12px 10px}
+  }
+  @media (max-width:340px){
+    .opts{grid-template-columns:repeat(4,minmax(0,1fr))}
+    .opt{font-size:.95rem;border-radius:8px}
+    .opts{gap:4px}
+    .scale-ends{font-size:.68rem}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none!important;transition:none!important}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Instrumen Skrining Kelelahan</div>
+    <h1>Fatigue Severity <em>Scale</em></h1>
+    <p class="lede">Sembilan pernyataan untuk mengukur seberapa besar kelelahan memengaruhi keseharian Anda.</p>
+  </header>
+
+  <div class="howto">
+    Pikirkan kondisi Anda <b>selama satu minggu terakhir</b>. Untuk setiap pernyataan, pilih angka
+    <b>1 (sangat tidak setuju)</b> sampai <b>7 (sangat setuju)</b> sesuai seberapa sesuai pernyataan itu dengan Anda.
+  </div>
+
+  <div class="progress-bar" aria-hidden="true">
+    <div class="track"><span id="trackFill"></span></div>
+    <span class="count"><span id="answered">0</span>/9 terjawab</span>
+  </div>
+
+  <form id="fssForm"></form>
+
+  <div class="actions">
+    <button type="button" class="btn-primary" id="calcBtn">Lihat Hasil</button>
+    <button type="button" class="btn-reset" id="resetBtn">Reset</button>
+  </div>
+  <p class="hint" id="hint" role="status"></p>
+
+  <section class="result" id="result" aria-live="polite">
+    <h2>Hasil Skoring FSS</h2>
+    <svg class="gauge" viewBox="0 0 240 145" role="img" aria-label="Gauge tingkat kelelahan">
+      <defs>
+        <linearGradient id="arcGrad" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%"  stop-color="#3FA48F"/>
+          <stop offset="50%" stop-color="#E0A94E"/>
+          <stop offset="100%" stop-color="#D95F4A"/>
+        </linearGradient>
+      </defs>
+      <path d="M20 120 A100 100 0 0 1 220 120" fill="none" stroke="#EAEEF2" stroke-width="16" stroke-linecap="round"/>
+      <path d="M20 120 A100 100 0 0 1 220 120" fill="none" stroke="url(#arcGrad)" stroke-width="16" stroke-linecap="round" opacity=".92"/>
+      <g class="needle" id="needle">
+        <line x1="120" y1="120" x2="120" y2="34" stroke="#1B2733" stroke-width="4" stroke-linecap="round"/>
+      </g>
+      <circle cx="120" cy="120" r="8" fill="#1B2733"/>
+      <circle cx="120" cy="120" r="3.2" fill="#fff"/>
+    </svg>
+    <div class="score-big" id="scoreBig">–</div>
+    <div class="score-label">Skor rata-rata (rentang 1–7)</div>
+
+    <div class="verdict" id="verdict"></div>
+    <p class="interp" id="interp"></p>
+
+    <div class="metrics">
+      <div class="metric"><div class="m-val" id="mSum">–</div><div class="m-key">Total / 63</div></div>
+      <div class="metric"><div class="m-val" id="mMean">–</div><div class="m-key">Rata-rata / 7</div></div>
+      <div class="metric"><div class="m-val" id="mCut">≥ 4</div><div class="m-key">Ambang klinis</div></div>
+    </div>
+  </section>
+
+  <p class="disclaimer">
+    <b>Catatan:</b> FSS (Krupp dkk., 1989) adalah alat skrining, bukan alat diagnosis. Skor ini tidak menggantikan
+    pemeriksaan tenaga kesehatan. Jika kelelahan mengganggu keseharian Anda, konsultasikan dengan dokter.
+  </p>
+</div>
+
+<script>
+  const QUESTIONS = [
+    "Motivasi saya menurun ketika saya mengalami kelelahan.",
+    "Berolahraga membuat saya menjadi lelah.",
+    "Saya mudah merasa lelah.",
+    "Kelelahan mengganggu fungsi fisik saya.",
+    "Kelelahan sering menimbulkan masalah bagi saya.",
+    "Kelelahan membuat saya tidak mampu melakukan aktivitas fisik yang berkelanjutan.",
+    "Kelelahan mengganggu saya dalam melaksanakan tugas dan tanggung jawab tertentu.",
+    "Kelelahan termasuk salah satu dari tiga gejala yang paling mengganggu saya.",
+    "Kelelahan mengganggu pekerjaan, kehidupan keluarga, atau kehidupan sosial saya."
+  ];
+
+  const form = document.getElementById('fssForm');
+  const hint = document.getElementById('hint');
+  const result = document.getElementById('result');
+  const trackFill = document.getElementById('trackFill');
+  const answeredEl = document.getElementById('answered');
+
+  // Build questions
+  QUESTIONS.forEach((q, i) => {
+    const fs = document.createElement('fieldset');
+    fs.id = 'fs-' + i;
+    let opts = '';
+    for (let v = 1; v <= 7; v++){
+      opts += `<input class="opt-input" type="radio" name="q${i}" id="q${i}-${v}" value="${v}">
+               <label class="opt" for="q${i}-${v}" aria-label="${v}">${v}</label>`;
+    }
+    fs.innerHTML = `
+      <legend>
+        <div class="qhead"><span class="qnum">${i+1}.</span><span class="qtext">${q}</span></div>
+      </legend>
+      <div class="opts">${opts}</div>
+      <div class="scale-ends"><span>Sangat tidak setuju</span><span>Sangat setuju</span></div>`;
+    form.appendChild(fs);
+  });
+
+  function getAnswers(){
+    return QUESTIONS.map((_, i) => {
+      const sel = form.querySelector(`input[name="q${i}"]:checked`);
+      return sel ? Number(sel.value) : null;
+    });
+  }
+
+  function updateProgress(){
+    const ans = getAnswers();
+    const n = ans.filter(v => v !== null).length;
+    answeredEl.textContent = n;
+    trackFill.style.width = (n/9*100) + '%';
+    ans.forEach((v,i)=>{
+      const fs = document.getElementById('fs-'+i);
+      fs.classList.toggle('done', v !== null);
+      if (v !== null) fs.classList.remove('missing');
+    });
+    if (n === 9) hint.textContent = '';
+  }
+
+  form.addEventListener('change', updateProgress);
+
+  function interpret(mean){
+    if (mean < 4) return {
+      lvl:'lvl-rest', label:'Kelelahan dalam batas normal',
+      text:'Skor Anda berada di bawah ambang klinis. Kelelahan tampaknya tidak berdampak signifikan pada aktivitas sehari-hari.'
+    };
+    if (mean < 5) return {
+      lvl:'lvl-mid', label:'Kelelahan signifikan',
+      text:'Skor rata-rata ≥ 4 umumnya menandakan kelelahan yang signifikan. Ada baiknya mendiskusikan hal ini dengan tenaga kesehatan.'
+    };
+    return {
+      lvl:'lvl-high', label:'Kelelahan berat',
+      text:'Skor Anda tinggi dan menandakan kelelahan berat yang kemungkinan mengganggu banyak aspek kehidupan. Sebaiknya konsultasikan dengan tenaga kesehatan.'
+    };
+  }
+
+  document.getElementById('calcBtn').addEventListener('click', () => {
+    const ans = getAnswers();
+    const firstMissing = ans.findIndex(v => v === null);
+    if (firstMissing !== -1){
+      const miss = ans.map((v,i)=>v===null?i:-1).filter(i=>i>=0);
+      miss.forEach(i => document.getElementById('fs-'+i).classList.add('missing'));
+      hint.textContent = `Masih ada ${miss.length} pernyataan yang belum diisi.`;
+      const target = document.getElementById('fs-'+firstMissing);
+      target.scrollIntoView({behavior:'smooth', block:'center'});
+      return;
+    }
+    hint.textContent = '';
+    const sum = ans.reduce((a,b)=>a+b,0);
+    const mean = sum/9;
+    const info = interpret(mean);
+
+    document.getElementById('scoreBig').textContent = mean.toFixed(2);
+    document.getElementById('mSum').textContent = sum;
+    document.getElementById('mMean').textContent = mean.toFixed(2);
+    const verdict = document.getElementById('verdict');
+    verdict.textContent = info.label;
+    verdict.className = 'verdict ' + info.lvl;
+    document.getElementById('interp').textContent = info.text;
+
+    // Needle: score 1 -> 180deg (left), 7 -> 0deg (right). Rotation from vertical-up baseline.
+    const angle = -90 + (mean - 1)/6 * 180;
+    document.getElementById('needle').style.transform = `rotate(${angle}deg)`;
+
+    result.classList.add('show');
+    result.scrollIntoView({behavior:'smooth', block:'start'});
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    form.reset();
+    result.classList.remove('show');
+    hint.textContent = '';
+    document.querySelectorAll('fieldset').forEach(fs => fs.classList.remove('missing','done'));
+    document.getElementById('needle').style.transform = 'rotate(-90deg)';
+    updateProgress();
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  updateProgress();
+</script>
+</body>
+</html>
